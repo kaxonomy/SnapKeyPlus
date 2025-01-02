@@ -1,8 +1,10 @@
-[![testsnap](https://github.com/user-attachments/assets/e9a23ba9-d394-4711-abfc-994932605d86)](https://github.com/cafali/SnapKey/releases)
+[![testsnap](https://github.com/user-attachments/assets/ca177c81-72a4-45cf-9ac3-83f63a4d6ed2)](https://github.com/kaxlabs/SnapKeyPlus/releases)
 
 **About SnapKeyPlus** 
 --------------------------------------------------------------------------------------------------
-SnapKeyPlus extends the functionality of SnapKey by adding the pull requests everyone actually wants. SnapKey provides a user-friendly alternative to the Razer Snap Tap function, making it accessible across all keyboards!
+SnapKeyPlus extends the functionality of SnapKey by adding the pull requests everyone actually wants. 100% less self-righteousness!
+
+SnapKey provides a user-friendly alternative to the Razer Snap Tap function, making it accessible across all keyboards!
 
 SnapKey is a lightweight, open-source tool that operates from the system tray and is designed to track inputs from the WASD keys, without interfering with any game files. Its main role is to recognize when these keys are pressed and automatically release any previously engaged commands for them. This guarantees responsive and precise input handling. SnapKey handles the WASD keys by default and lets you rebind them to your liking via the config file.
 
@@ -15,7 +17,7 @@ SnapKey is a lightweight, open-source tool that operates from the system tray an
 Download
 --------------------------------------------------------------------------------------------------
 <p align="center">
-  <a href="https://github.com/cafali/SnapKey/releases">Download from GitHub</a> |
+  <a href="https://github.com/kaxlabs/SnapKeyPlus/releases">Download from GitHub</a> |
   <a href="https://sourceforge.net/projects/snapkey/">Download from SourceForge</a> |
   <a href="https://www.softpedia.com/get/Tweak/System-Tweak/SnapKey.shtml">Download from Softpedia</a>
 </p>
@@ -75,7 +77,7 @@ press **"A"** instead.
 
 
 1. Get SnapKey:
-   - [Download](https://github.com/cafali/SnapKey/releases), Unzip and Launch SnapKey.exe
+   - [Download](https://github.com/kaxlabs/SnapKeyPlus/releases), Unzip and Launch SnapKey.exe
 
 <img width="417" alt="image" src="https://github.com/user-attachments/assets/e4606577-6edb-4c12-ad6e-9e5ee01ba18f">
 
@@ -160,20 +162,19 @@ Looking for More Information? Got Questions or Need Help?
 ----
 
 <p align="center">
-  SnapKey by
+  SnapKeyPlus by
 </p>
 
 <p align="center">
   <a href="https://github.com/cafali">@cafali</a> 
   <a href="https://github.com/minteeaa">@minteeaa</a> 
   <a href="https://github.com/Yaw-Dev">@Yaw-Dev</a>
+  <a href="https://github.com/kaxlabs">@kaxlabs</a> 
+  <a href="https://github.com/fazildgr8">@fazildgr8</a> 
 </p>
 
 <p align="center">
-  <a href="https://github.com/cafali/Snapkey/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=cafali/Snapkey" />
+  <a href="https://github.com/kaxlabs/SnapKeyPlus/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=kaxlabs/SnapKeyPlus" />
   </a>
 </p>
-
-
-
