@@ -157,6 +157,7 @@ void handleKeyDown(int keyCode)
     GroupState& currentGroupInfo = GroupInfo[currentKeyInfo.group];
     if (!currentKeyInfo.keyDown)
     {
+        addRandomDelay();
         currentKeyInfo.keyDown = true;
         SendKey(keyCode, true);
         if (currentGroupInfo.activeKey == 0 || currentGroupInfo.activeKey == keyCode)
@@ -168,7 +169,6 @@ void handleKeyDown(int keyCode)
             currentGroupInfo.previousKey = currentGroupInfo.activeKey;
             currentGroupInfo.activeKey = keyCode;
 
-            addRandomDelay(); // Add a random delay before sending the key
             SendKey(currentGroupInfo.previousKey, false);
         }
     }
@@ -178,27 +178,21 @@ void handleKeyUp(int keyCode)
 {
     KeyState& currentKeyInfo = KeyInfo[keyCode];
     GroupState& currentGroupInfo = GroupInfo[currentKeyInfo.group];
-    if (currentGroupInfo.previousKey == keyCode && !currentKeyInfo.keyDown)
-    {
-        currentGroupInfo.previousKey = 0;
-    }
     if (currentKeyInfo.keyDown)
     {
+        addRandomDelay();
+
         currentKeyInfo.keyDown = false;
-        if (currentGroupInfo.activeKey == keyCode && currentGroupInfo.previousKey != 0)
+
+        if (currentGroupInfo.activeKey == keyCode)
         {
             SendKey(keyCode, false);
-
             currentGroupInfo.activeKey = currentGroupInfo.previousKey;
             currentGroupInfo.previousKey = 0;
-
-            SendKey(currentGroupInfo.activeKey, true);
         }
-        else
+        else if (currentGroupInfo.previousKey == keyCode)
         {
             currentGroupInfo.previousKey = 0;
-            if (currentGroupInfo.activeKey == keyCode) currentGroupInfo.activeKey = 0;
-            SendKey(keyCode, false);
         }
     }
 }
@@ -210,12 +204,10 @@ bool isSimulatedKeyEvent(DWORD flags) {
 void SendKey(int targetKey, bool keyDown)
 {
     INPUT input = {0};
+    input.type = INPUT_KEYBOARD;
     input.ki.wVk = targetKey;
     input.ki.wScan = MapVirtualKey(targetKey, 0);
-    input.type = INPUT_KEYBOARD;
-
-    DWORD flags = KEYEVENTF_SCANCODE;
-    input.ki.dwFlags = keyDown ? flags : flags | KEYEVENTF_KEYUP;
+    input.ki.dwFlags = keyDown ? 0 : KEYEVENTF_KEYUP;
     SendInput(1, &input, sizeof(INPUT));
 }
 
@@ -224,11 +216,18 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
     if (!isLocked && nCode >= 0)
     {
         KBDLLHOOKSTRUCT *pKeyBoard = (KBDLLHOOKSTRUCT *)lParam;
-        if (!isSimulatedKeyEvent(pKeyBoard -> flags)) {
-            if (KeyInfo[pKeyBoard -> vkCode].registered)
+        if (!isSimulatedKeyEvent(pKeyBoard->flags))
+        {
+            if (KeyInfo[pKeyBoard->vkCode].registered)
             {
-                if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) handleKeyDown(pKeyBoard -> vkCode);
-                if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) handleKeyUp(pKeyBoard -> vkCode);
+                if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
+                {
+                    handleKeyDown(pKeyBoard->vkCode);
+                }
+                if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP)
+                {
+                    handleKeyUp(pKeyBoard->vkCode);
+                }
                 return 1;
             }
         }
