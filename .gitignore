@@ -1,1 +1,7 @@
 README.md
+LICENSE.md
+.idea/
+*.bat
+*.txt
+*.exe
+*.o
