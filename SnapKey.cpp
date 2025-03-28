@@ -64,8 +64,6 @@ void addRandomDelay()
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(minDelay, maxDelay);
-
-    // Generate a random delay duration
     int delayDuration = dis(gen);
 
     // Sleep for the random duration
@@ -157,7 +155,6 @@ void handleKeyDown(int keyCode)
     GroupState& currentGroupInfo = GroupInfo[currentKeyInfo.group];
     if (!currentKeyInfo.keyDown)
     {
-        addRandomDelay();
         currentKeyInfo.keyDown = true;
         SendKey(keyCode, true);
         if (currentGroupInfo.activeKey == 0 || currentGroupInfo.activeKey == keyCode)
@@ -175,24 +172,32 @@ void handleKeyDown(int keyCode)
 }
 
 void handleKeyUp(int keyCode)
+
 {
     KeyState& currentKeyInfo = KeyInfo[keyCode];
+
     GroupState& currentGroupInfo = GroupInfo[currentKeyInfo.group];
+
+    if (currentGroupInfo.previousKey == keyCode && !currentKeyInfo.keyDown)
+    {
+        currentGroupInfo.previousKey = 0;
+    }
+
     if (currentKeyInfo.keyDown)
     {
-        addRandomDelay();
-
         currentKeyInfo.keyDown = false;
-
-        if (currentGroupInfo.activeKey == keyCode)
+        if (currentGroupInfo.activeKey == keyCode && currentGroupInfo.previousKey != 0)
         {
             SendKey(keyCode, false);
             currentGroupInfo.activeKey = currentGroupInfo.previousKey;
             currentGroupInfo.previousKey = 0;
+            SendKey(currentGroupInfo.activeKey, true);
         }
-        else if (currentGroupInfo.previousKey == keyCode)
+        else
         {
             currentGroupInfo.previousKey = 0;
+            if (currentGroupInfo.activeKey == keyCode) currentGroupInfo.activeKey = 0;
+            SendKey(keyCode, false);
         }
     }
 }
@@ -203,11 +208,13 @@ bool isSimulatedKeyEvent(DWORD flags) {
 
 void SendKey(int targetKey, bool keyDown)
 {
-    INPUT input = {0};
-    input.type = INPUT_KEYBOARD;
+    static INPUT input = {0};
     input.ki.wVk = targetKey;
     input.ki.wScan = MapVirtualKey(targetKey, 0);
-    input.ki.dwFlags = keyDown ? 0 : KEYEVENTF_KEYUP;
+    input.type = INPUT_KEYBOARD;
+    DWORD flags = KEYEVENTF_SCANCODE;
+    input.ki.dwFlags = keyDown ? flags : flags | KEYEVENTF_KEYUP;
+    addRandomDelay();
     SendInput(1, &input, sizeof(INPUT));
 }
 
