@@ -48,10 +48,10 @@ bool isLocked = false; // Variable to track the lock state
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void InitNotifyIconData(HWND hwnd);
-bool LoadConfig(const std::wstring& filename);
-void CreateDefaultConfig(const std::wstring& filename); // Declaration
-void RestoreConfigFromBackup(const std::wstring& backupFilename, const std::wstring& destinationFilename); // Declaration
-std::wstring GetVersionInfo(); // Declaration
+bool LoadConfig(const std::string& filename);
+void CreateDefaultConfig(const std::string& filename); // Declaration
+void RestoreConfigFromBackup(const std::string& backupFilename, const std::string& destinationFilename); // Declaration
+std::string GetVersionInfo(); // Declaration
 void SendKey(int target, bool keyDown);
 
 // Random delay settings
@@ -73,7 +73,7 @@ void addRandomDelay()
 int main()
 {
     // Load key bindings (config file)
-    if (!LoadConfig(L"config.cfg")) {
+    if (!LoadConfig("config.cfg")) {
         return 1;
     }
 
@@ -269,16 +269,16 @@ void InitNotifyIconData(HWND hwnd)
     Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
-std::wstring GetVersionInfo() // Get version info
+std::string GetVersionInfo() // Get version info
 {
-    std::wifstream versionFile(L"meta/version");
+    std::ifstream versionFile("meta/version");
     if (!versionFile.is_open()) {
-        return L"Version info not available";
+        return "Version info not available";
     }
 
-    std::wstring version;
+    std::string version;
     std::getline(versionFile, version);
-    return version.empty() ? L"Version info not available" : version;
+    return version.empty() ? "Version info not available" : version;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -344,7 +344,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         case ID_TRAY_VERSION_INFO:
             {
-                std::wstring versionInfo = GetVersionInfo();
+                std::string versionInfo = GetVersionInfo();
                 MessageBox(hwnd, versionInfo.c_str(), TEXT("Version Info"), MB_OK);
                 
             }
@@ -353,9 +353,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 TCHAR szExeFileName[MAX_PATH];
                 GetModuleFileName(NULL, szExeFileName, MAX_PATH);
-                std::wstring exePath = szExeFileName;
-                std::wstring exeDir = exePath.substr(0, exePath.find_last_of(L"\\/"));
-                std::wstring configPath = exeDir + L"\\config.cfg";
+                std::string exePath = std::string(szExeFileName);
+                std::string exeDir = exePath.substr(0, exePath.find_last_of("\\/"));
+                std::string configPath = exeDir + "\\config.cfg";
                 ShellExecute(NULL, TEXT("open"), configPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
             }
             break;
@@ -395,18 +395,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 // Function to copy snapkey.backup (meta folder) to the main directory
-void RestoreConfigFromBackup(const std::wstring& backupFilename, const std::wstring& destinationFilename)
+void RestoreConfigFromBackup(const std::string& backupFilename, const std::string& destinationFilename)
 {
     // Get the executable path
-    TCHAR exePath[MAX_PATH];
+    char exePath[MAX_PATH];
     GetModuleFileName(NULL, exePath, MAX_PATH);
-
-    // Convert wide-character path to narrow string
-    std::wstring exeDir = exePath;
-    exeDir = exeDir.substr(0, exeDir.find_last_of(L"\\/"));
-
-    std::wstring sourcePath = exeDir + L"\\meta\\" + backupFilename;
-    std::wstring destinationPath = exeDir + L"\\" + destinationFilename;
+    std::string exeDir = std::string(exePath);
+    exeDir = exeDir.substr(0, exeDir.find_last_of("\\/"));
+    
+    std::string sourcePath = exeDir + "\\meta\\" + backupFilename;
+    std::string destinationPath = exeDir + "\\" + destinationFilename;
 
     if (CopyFile(sourcePath.c_str(), destinationPath.c_str(), FALSE)) {
         // Copy successful
@@ -414,51 +412,50 @@ void RestoreConfigFromBackup(const std::wstring& backupFilename, const std::wstr
     } else {
         // backup.snapkey copy failed
         DWORD error = GetLastError();
-        std::wstring errorMsg = L"Failed to restore config from backup. Error code: " + std::to_wstring(error);
+        std::string errorMsg = "Failed to restore config from backup. Error code: " + std::to_string(error);
         MessageBox(NULL, errorMsg.c_str(), TEXT("SnapKey Error"), MB_ICONERROR | MB_OK);
     }
 }
 
 // Restore config.cfg from backup.snapkey
-void CreateDefaultConfig(const std::wstring& filename)
+void CreateDefaultConfig(const std::string& filename)
 {
-    std::wstring backupFilename = L"backup.snapkey";
+    std::string backupFilename = "backup.snapkey";
+    // Just pass the filenames, as RestoreConfigFromBackup now handles the full paths
     RestoreConfigFromBackup(backupFilename, filename);
 }
 
 // Check for config.cfg
-bool LoadConfig(const std::wstring& filename)
+bool LoadConfig(const std::string& filename)
 {
     // Get the executable path
-    TCHAR exePath[MAX_PATH];
+    char exePath[MAX_PATH];
     GetModuleFileName(NULL, exePath, MAX_PATH);
-
-    // Convert wide-character path to narrow string
-    std::wstring exeDir = exePath;
-    exeDir = exeDir.substr(0, exeDir.find_last_of(L"\\/"));
-
-    std::wstring fullPath = exeDir + L"\\" + filename;
-
-    std::wifstream configFile(fullPath);
+    std::string exeDir = std::string(exePath);
+    exeDir = exeDir.substr(0, exeDir.find_last_of("\\/"));
+    
+    std::string fullPath = exeDir + "\\" + filename;
+    
+    std::ifstream configFile(fullPath);
     if (!configFile.is_open()) {
         CreateDefaultConfig(filename);  // Restore config from backup.snapkey if file doesn't exist
         return false;
     }
 
-    std::wstring line; // Check for duplicated keys in the config file
+    string line; // Check for duplicated keys in the config file
     int id = 0;
-    while (std::getline(configFile, line)) {
-        std::wistringstream iss(line);
-        std::wstring key;
+    while (getline(configFile, line)) {
+        istringstream iss(line);
+        string key;
         int value;
-        std::wregex secPat(LR"(\\s*\\[Group\\]\\s*)");
-        if (std::regex_match(line, secPat))
+        regex secPat(R"(\s*\[Group\]\s*)");
+        if (regex_match(line, secPat))
         {
             id++;
         }
-        else if (std::getline(iss, key, L'=') && (iss >> value))
+        else if (getline(iss, key, '=') && (iss >> value))
         {
-            if (key.find(L"key") != std::wstring::npos)
+            if (key.find("key") != string::npos)
             {
                 if (!KeyInfo[value].registered)
                 {
@@ -473,10 +470,10 @@ bool LoadConfig(const std::wstring& filename)
                 }
             }
         }
-        if (line.find(L"random_delay_ms=") == 0)
+        if (line.find("random_delay_ms=") == 0)
         {
-            std::wsmatch match;
-            std::wregex delayPattern(LR"(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*)");
+            std::smatch match;
+            std::regex delayPattern(R"(\s*(\d+)\s*,\s*(\d+)\s*)");
             if (std::regex_search(line, match, delayPattern) && match.size()) {
                 minDelay = std::stoi(match[1].str());
                 maxDelay = std::stoi(match[2].str());
