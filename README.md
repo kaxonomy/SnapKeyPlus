@@ -4,15 +4,13 @@
 --------------------------------------------------------------------------------------------------
 SnapKeyPlus extends the functionality of SnapKey by adding the pull requests everyone actually wants. 100% less self-righteousness!
 
+**SnapKeyPlus enables you to play a wide variety of games. Including Marvel Rivals and CS:GO! Just run as Administrator.**
+
 SnapKey provides a user-friendly alternative to the Razer Snap Tap function, making it accessible across all keyboards!
 
 SnapKey is a lightweight, open-source tool that operates from the system tray and is designed to track inputs from the WASD keys, without interfering with any game files. Its main role is to recognize when these keys are pressed and automatically release any previously engaged commands for them. This guarantees responsive and precise input handling. SnapKey handles the WASD keys by default and lets you rebind them to your liking via the config file.
 
 **Need More Info on SnapKey?** Visit the [**SnapKey Wiki**](https://github.com/cafali/SnapKey/wiki)
-
-[![COMPATIBLE](https://github.com/user-attachments/assets/069a7a23-cfe4-47eb-8ac2-05872fcc2028)](https://github.com/cafali/SnapKey/wiki/Compatibility-List)
-
-
 
 Download
 --------------------------------------------------------------------------------------------------
@@ -170,14 +168,14 @@ Looking for More Information? Got Questions or Need Help?
 
 <p align="center">
   <a href="https://github.com/cafali">@cafali</a> 
-  <a href="https://github.com/minteeaa">@minteeaa</a> 
+  <a href="https://github.com/minteeaa">@minteeaa</a>
+  <a href="https://github.com/kaxonomy">@kaxonomy</a> 
   <a href="https://github.com/Yaw-Dev">@Yaw-Dev</a>
-  <a href="https://github.com/kaxlabs">@kaxlabs</a> 
   <a href="https://github.com/fazildgr8">@fazildgr8</a> 
 </p>
 
 <p align="center">
-  <a href="https://github.com/kaxlabs/SnapKeyPlus/graphs/contributors">
+  <a href="https://github.com/kaxonomy/SnapKeyPlus/graphs/contributors">
     <img src="https://contrib.rocks/image?repo=kaxlabs/SnapKeyPlus" />
   </a>
 </p>
