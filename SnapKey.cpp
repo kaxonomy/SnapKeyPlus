@@ -21,7 +21,8 @@ using namespace std;
 #define ID_TRAY_RESTART_SNAPKEY         3004
 #define ID_TRAY_HELP                    3005 // v1.2.8
 #define ID_TRAY_CHECKUPDATE             3006 // v1.2.8
-#define ID_TRAY_VAC_BYPASS              3007
+#define ID_TRAY_VAC_BYPASS_A            3007
+#define ID_TRAY_VAC_BYPASS_B            3008
 #define WM_TRAYICON                     (WM_USER + 1)
 
 struct KeyState
@@ -45,8 +46,9 @@ HHOOK hHook = NULL;
 HANDLE hMutex = NULL;
 NOTIFYICONDATA nid;
 bool isLocked = false; // Variable to track the lock state
-bool vacBypassEnabled = false; // VAC bypass toggle
-int vacCounter = 0;            // counter for imperfect snaptap
+bool vacBypassAEnabled = false; // VAC bypass A toggle
+bool vacBypassBEnabled = false; // VAC bypass B toggle
+int vacCounter = 0;    // counter for imperfect snaptap
 
 // Function declarations
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
@@ -147,9 +149,9 @@ void handleKeyDown(int keyCode)
     if (!currentKeyInfo.keyDown)
     {
         currentKeyInfo.keyDown = true;
-        SendKey(keyCode, true);
         if (currentGroupInfo.activeKey == 0 || currentGroupInfo.activeKey == keyCode)
         {
+            SendKey(keyCode, true);
             currentGroupInfo.activeKey = keyCode;
         }
         else
@@ -157,20 +159,29 @@ void handleKeyDown(int keyCode)
             currentGroupInfo.previousKey = currentGroupInfo.activeKey;
             currentGroupInfo.activeKey = keyCode;
 
-            if (vacBypassEnabled)
+            if (vacBypassBEnabled && (rand() % 2 == 0))
             {
-                if (vacCounter >= 17)
-                {
-                    Sleep((rand() % 21) + 15); // 15-35ms overlap
-                    vacCounter = 0;
-                }
-                else
-                {
-                    vacCounter++;
-                }
+                SendKey(currentGroupInfo.previousKey, false);
+                Sleep((rand() % 11) + 5); // 5-15ms delay
+                SendKey(keyCode, true);
             }
-
-            SendKey(currentGroupInfo.previousKey, false);
+            else
+            {
+                SendKey(keyCode, true);
+                if (vacBypassAEnabled)
+                {
+                    if (vacCounter >= 17)
+                    {
+                        Sleep((rand() % 21) + 15); // 15-35ms overlap
+                        vacCounter = 0;
+                    }
+                    else
+                    {
+                        vacCounter++;
+                    }
+                }
+                SendKey(currentGroupInfo.previousKey, false);
+            }
         }
     }
 }
@@ -281,7 +292,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             AppendMenu(hMenu, MF_STRING, ID_TRAY_REBIND_KEYS, TEXT("Rebind Keys"));
             AppendMenu(hMenu, MF_STRING, ID_TRAY_RESTART_SNAPKEY, TEXT("Restart SnapKey"));
             AppendMenu(hMenu, MF_STRING, ID_TRAY_LOCK_FUNCTION, isLocked ? TEXT("Enable SnapKey") : TEXT("Disable SnapKey")); // dynamicly switch between state
-            AppendMenu(hMenu, MF_STRING, ID_TRAY_VAC_BYPASS, vacBypassEnabled ? TEXT("Disable VAC bypass") : TEXT("Enable VAC bypass"));
+            AppendMenu(hMenu, MF_STRING | (vacBypassAEnabled ? MF_CHECKED : 0), ID_TRAY_VAC_BYPASS_A, TEXT("VAC bypass A"));
+            AppendMenu(hMenu, MF_STRING | (vacBypassBEnabled ? MF_CHECKED : 0), ID_TRAY_VAC_BYPASS_B, TEXT("VAC bypass B"));
             // support & info
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hMenu, MF_STRING, ID_TRAY_HELP, TEXT("Get Help"));
@@ -386,9 +398,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
             }
             break;
-        case ID_TRAY_VAC_BYPASS: // toggle vac bypass
+        case ID_TRAY_VAC_BYPASS_A: // toggle VAC bypass A
             {
-                vacBypassEnabled = !vacBypassEnabled;
+                vacBypassAEnabled = !vacBypassAEnabled;
+            }
+            break;
+        case ID_TRAY_VAC_BYPASS_B: // toggle VAC bypass B
+            {
+                vacBypassBEnabled = !vacBypassBEnabled;
             }
             break;
         }
