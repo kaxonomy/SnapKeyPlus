@@ -8,6 +8,8 @@
 #include <string>
 #include <unordered_map>
 #include <regex>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -19,6 +21,7 @@ using namespace std;
 #define ID_TRAY_RESTART_SNAPKEY         3004
 #define ID_TRAY_HELP                    3005 // v1.2.8
 #define ID_TRAY_CHECKUPDATE             3006 // v1.2.8
+#define ID_TRAY_VAC_BYPASS              3007
 #define WM_TRAYICON                     (WM_USER + 1)
 
 struct KeyState
@@ -42,6 +45,8 @@ HHOOK hHook = NULL;
 HANDLE hMutex = NULL;
 NOTIFYICONDATA nid;
 bool isLocked = false; // Variable to track the lock state
+bool vacBypassEnabled = false; // VAC bypass toggle
+int vacCounter = 0;            // counter for imperfect snaptap
 
 // Function declarations
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
@@ -101,6 +106,9 @@ int main()
     // Initialize and add the system tray icon
     InitNotifyIconData(hwnd);
 
+    // Seed RNG for VAC bypass delay
+    srand(static_cast<unsigned int>(time(NULL)));
+
     // Set the hook
     hHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, NULL, 0);
     if (hHook == NULL)
@@ -148,6 +156,19 @@ void handleKeyDown(int keyCode)
         {
             currentGroupInfo.previousKey = currentGroupInfo.activeKey;
             currentGroupInfo.activeKey = keyCode;
+
+            if (vacBypassEnabled)
+            {
+                if (vacCounter >= 17)
+                {
+                    Sleep((rand() % 21) + 15); // 15-35ms overlap
+                    vacCounter = 0;
+                }
+                else
+                {
+                    vacCounter++;
+                }
+            }
 
             SendKey(currentGroupInfo.previousKey, false);
         }
@@ -260,6 +281,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             AppendMenu(hMenu, MF_STRING, ID_TRAY_REBIND_KEYS, TEXT("Rebind Keys"));
             AppendMenu(hMenu, MF_STRING, ID_TRAY_RESTART_SNAPKEY, TEXT("Restart SnapKey"));
             AppendMenu(hMenu, MF_STRING, ID_TRAY_LOCK_FUNCTION, isLocked ? TEXT("Enable SnapKey") : TEXT("Disable SnapKey")); // dynamicly switch between state
+            AppendMenu(hMenu, MF_STRING, ID_TRAY_VAC_BYPASS, vacBypassEnabled ? TEXT("Disable VAC bypass") : TEXT("Enable VAC bypass"));
             // support & info
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hMenu, MF_STRING, ID_TRAY_HELP, TEXT("Get Help"));
@@ -362,6 +384,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     Shell_NotifyIcon(NIM_MODIFY, &nid);
                     DestroyIcon(hIcon);
                 }
+            }
+            break;
+        case ID_TRAY_VAC_BYPASS: // toggle vac bypass
+            {
+                vacBypassEnabled = !vacBypassEnabled;
             }
             break;
         }
