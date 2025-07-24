@@ -16,30 +16,24 @@ SnapKey is a lightweight, open-source tool that operates from the system tray an
 
 ### **New in v1.2.9 – Experimental VAC/CS2 Bypass Modes 🚫🎮**
 --------------------------------------------------------------------------------------------------
-SnapKeyPlus v1.2.9 introduces two **experimental bypass modes** aimed at improving compatibility with games that impose stricter input policies, such as **Counter-Strike 2 (CS2)**. These modes can be toggled independently in the configuration file and allow SnapKey to remain active while circumventing CS2’s built-in restrictions on background input automation.
+SnapKeyPlus v1.2.9 introduces two **experimental bypass modes** aimed at improving compatibility with games that impose stricter input policies, such as **Counter-Strike 2 (CS2)**. These modes can be toggled independently in the configuration file and allow SnapKeyPlus to remain active while circumventing CS2’s built-in restrictions on background input automation.
 
 > ⚙️ **VAC Bypass A** — Simulates real-time user input using a lower-level system call chain.
+> 
 > ⚙️ **VAC Bypass B** — Uses synthetic input injection with randomized timings to mimic human behavior more accurately.
 
-Both modes are entirely optional and **disabled by default**. When enabled, SnapKey will change its tray icon to indicate **VAC bypass mode** is active:
-
-* ✅ A curved arrow wrapping around the "VAC" label appears.
-* ⛔ This visually reminds users that advanced compatibility workarounds are enabled.
+When a mode is enabled, SnapKeyPlus will change its tray icon to indicate **VAC bypass mode** is active:
 <img width="239" height="274" alt="image" src="https://github.com/user-attachments/assets/a1019787-0420-49e6-aa87-1e79f78bb66c" />
 
 > \[!WARNING]
-> These features are **experimental** and **not officially endorsed by Valve or any game publisher**. While SnapKey does not directly modify any game files or memory, **use of automation tools may still violate Terms of Service** for certain games.
+> These features are **experimental** and **not officially endorsed by Valve or any game publisher**. While SnapKeyPlus does not directly modify any game files or memory, **use of automation tools may still violate Terms of Service** for certain games.
 > **Use at your own risk.**
 
 Download
 --------------------------------------------------------------------------------------------------
 <p align="center">
-  <a href="https://github.com/kaxlabs/SnapKeyPlus/releases">Download from GitHub</a> |
-  <a href="https://sourceforge.net/projects/snapkey/">Download from SourceForge</a> |
-  <a href="https://www.softpedia.com/get/Tweak/System-Tweak/SnapKey.shtml">Download from Softpedia</a>
+  <a href="https://github.com/kaxlabs/SnapKeyPlus/releases">Download from GitHub</a>
 </p>
-
-[![latesver](https://github.com/user-attachments/assets/09694f7c-6eeb-4c80-9a02-1d777956d181)](https://github.com/cafali/SnapKey/wiki/Updates)
 
 **SnapKey Features**
 --------------------------------------------------------------------------------------------------
