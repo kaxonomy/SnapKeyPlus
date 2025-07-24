@@ -6,6 +6,7 @@ key2=68
 key3=83
 key4=87
 
+random_delay_ms=(1,2)
 
 # After applying the changes, please restart SnapKey.
 # For further help, visit the README.pdf file.

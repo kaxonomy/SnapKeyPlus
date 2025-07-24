@@ -69,6 +69,22 @@ void SendKey(int target, bool keyDown);
 void UpdateTrayIcon();
 void WriteConfigValue(const std::string& filename, const std::string& key, int value);
 
+// Random delay settings
+int minDelay = 1;
+int maxDelay = 2;
+
+void addRandomDelay()
+{
+    // Create a random number generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(minDelay, maxDelay);
+    int delayDuration = dis(gen);
+
+    // Sleep for the random duration
+    std::this_thread::sleep_for(std::chrono::milliseconds(delayDuration));
+}
+
 int main()
 {
     // Load key bindings (config file)
@@ -196,23 +212,25 @@ void handleKeyDown(int keyCode)
 }
 
 void handleKeyUp(int keyCode)
+
 {
     KeyState& currentKeyInfo = KeyInfo[keyCode];
+
     GroupState& currentGroupInfo = GroupInfo[currentKeyInfo.group];
+
     if (currentGroupInfo.previousKey == keyCode && !currentKeyInfo.keyDown)
     {
         currentGroupInfo.previousKey = 0;
     }
+
     if (currentKeyInfo.keyDown)
     {
         currentKeyInfo.keyDown = false;
         if (currentGroupInfo.activeKey == keyCode && currentGroupInfo.previousKey != 0)
         {
             SendKey(keyCode, false);
-
             currentGroupInfo.activeKey = currentGroupInfo.previousKey;
             currentGroupInfo.previousKey = 0;
-
             SendKey(currentGroupInfo.activeKey, true);
         }
         else
@@ -230,13 +248,13 @@ bool isSimulatedKeyEvent(DWORD flags) {
 
 void SendKey(int targetKey, bool keyDown)
 {
-    INPUT input = {0};
+    static INPUT input = {0};
     input.ki.wVk = targetKey;
     input.ki.wScan = MapVirtualKey(targetKey, 0);
     input.type = INPUT_KEYBOARD;
-
     DWORD flags = KEYEVENTF_SCANCODE;
     input.ki.dwFlags = keyDown ? flags : flags | KEYEVENTF_KEYUP;
+    addRandomDelay();
     SendInput(1, &input, sizeof(INPUT));
 }
 
@@ -245,11 +263,18 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
     if (!isLocked && nCode >= 0)
     {
         KBDLLHOOKSTRUCT *pKeyBoard = (KBDLLHOOKSTRUCT *)lParam;
-        if (!isSimulatedKeyEvent(pKeyBoard -> flags)) {
-            if (KeyInfo[pKeyBoard -> vkCode].registered)
+        if (!isSimulatedKeyEvent(pKeyBoard->flags))
+        {
+            if (KeyInfo[pKeyBoard->vkCode].registered)
             {
-                if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) handleKeyDown(pKeyBoard -> vkCode);
-                if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) handleKeyUp(pKeyBoard -> vkCode);
+                if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
+                {
+                    handleKeyDown(pKeyBoard->vkCode);
+                }
+                if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP)
+                {
+                    handleKeyUp(pKeyBoard->vkCode);
+                }
                 return 1;
             }
         }
@@ -366,7 +391,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         case ID_TRAY_REBIND_KEYS: // rebind keys - open cfg
             {
-                ShellExecute(NULL, TEXT("open"), TEXT("config.cfg"), NULL, NULL, SW_SHOWNORMAL);
+                TCHAR szExeFileName[MAX_PATH];
+                GetModuleFileName(NULL, szExeFileName, MAX_PATH);
+                std::string exePath = std::string(szExeFileName);
+                std::string exeDir = exePath.substr(0, exePath.find_last_of("\\/"));
+                std::string configPath = exeDir + "\\config.cfg";
+                ShellExecute(NULL, TEXT("open"), configPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
             }
             break;
         
@@ -442,8 +472,14 @@ std::string GetVersionInfo() {
 // Function to copy snapkey.backup (meta folder) to the main directory
 void RestoreConfigFromBackup(const std::string& backupFilename, const std::string& destinationFilename)
 {
-    std::string sourcePath = "meta\\" + backupFilename;
-    std::string destinationPath = destinationFilename;
+    // Get the executable path
+    char exePath[MAX_PATH];
+    GetModuleFileName(NULL, exePath, MAX_PATH);
+    std::string exeDir = std::string(exePath);
+    exeDir = exeDir.substr(0, exeDir.find_last_of("\\/"));
+    
+    std::string sourcePath = exeDir + "\\meta\\" + backupFilename;
+    std::string destinationPath = exeDir + "\\" + destinationFilename;
 
     if (CopyFile(sourcePath.c_str(), destinationPath.c_str(), FALSE)) {
         // Copy successful
@@ -451,7 +487,7 @@ void RestoreConfigFromBackup(const std::string& backupFilename, const std::strin
     } else {
         // backup.snapkey copy failed
         DWORD error = GetLastError();
-        std::string errorMsg = "Failed to restore config from backup.";
+        std::string errorMsg = "Failed to restore config from backup. Error code: " + std::to_string(error);
         MessageBox(NULL, errorMsg.c_str(), TEXT("SnapKey Error"), MB_ICONERROR | MB_OK);
     }
 }
@@ -460,6 +496,7 @@ void RestoreConfigFromBackup(const std::string& backupFilename, const std::strin
 void CreateDefaultConfig(const std::string& filename)
 {
     std::string backupFilename = "backup.snapkey";
+    // Just pass the filenames, as RestoreConfigFromBackup now handles the full paths
     RestoreConfigFromBackup(backupFilename, filename);
 }
 
@@ -495,7 +532,15 @@ void WriteConfigValue(const std::string& filename, const std::string& key, int v
 // Check for config.cfg
 bool LoadConfig(const std::string& filename)
 {
-    std::ifstream configFile(filename);
+    // Get the executable path
+    char exePath[MAX_PATH];
+    GetModuleFileName(NULL, exePath, MAX_PATH);
+    std::string exeDir = std::string(exePath);
+    exeDir = exeDir.substr(0, exeDir.find_last_of("\\/"));
+    
+    std::string fullPath = exeDir + "\\" + filename;
+    
+    std::ifstream configFile(fullPath);
     if (!configFile.is_open()) {
         CreateDefaultConfig(filename);  // Restore config from backup.snapkey if file doesn't exist
         return false;
@@ -550,6 +595,15 @@ bool LoadConfig(const std::string& filename)
             }
             else if (key == "vac_b_max_delay") {
                 vacBMaxDelay = value; foundBMax = true;
+            }
+        }
+        if (line.find("random_delay_ms=") == 0)
+        {
+            std::smatch match;
+            std::regex delayPattern(R"(\s*(\d+)\s*,\s*(\d+)\s*)");
+            if (std::regex_search(line, match, delayPattern) && match.size()) {
+                minDelay = std::stoi(match[1].str());
+                maxDelay = std::stoi(match[2].str());
             }
         }
     }

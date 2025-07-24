@@ -1,7 +1,11 @@
-<img width="1200" height="675" alt="disconnected_with_ban_centered_aa" src="https://github.com/user-attachments/assets/6785c5cd-f4ab-4752-aa66-b64544b8fb92" />
+[![testsnap](https://github.com/user-attachments/assets/ca177c81-72a4-45cf-9ac3-83f63a4d6ed2)](https://github.com/kaxlabs/SnapKeyPlus/releases)
 
-**About SnapKey** 
+**About SnapKeyPlus** 
 --------------------------------------------------------------------------------------------------
+SnapKeyPlus extends the functionality of SnapKey by adding the pull requests everyone actually wants. 100% less self-righteousness!
+
+**SnapKeyPlus enables you to play a wide variety of games. Including Marvel Rivals and CS:GO! Just run as Administrator.**
+
 SnapKey provides a user-friendly alternative to the Razer Snap Tap function, making it accessible across all keyboards!
 
 SnapKey is a lightweight, open-source tool that operates from the system tray and is designed to track inputs from the WASD keys, without interfering with any game files. Its main role is to recognize when these keys are pressed and automatically release any previously engaged commands for them. This guarantees responsive and precise input handling. SnapKey handles the WASD keys by default and lets you rebind them to your liking via the config file.
@@ -11,10 +15,8 @@ SnapKey is a lightweight, open-source tool that operates from the system tray an
 [![COMPATIBLE](https://github.com/user-attachments/assets/069a7a23-cfe4-47eb-8ac2-05872fcc2028)](https://github.com/cafali/SnapKey/wiki/Compatibility-List)
 
 ### **New in v1.2.9 – Experimental VAC/CS2 Bypass Modes 🚫🎮**
-
----
-
-SnapKey v1.2.9 introduces two **experimental bypass modes** aimed at improving compatibility with games that impose stricter input policies, such as **Counter-Strike 2 (CS2)**. These modes can be toggled independently in the configuration file and allow SnapKey to remain active while circumventing CS2’s built-in restrictions on background input automation.
+--------------------------------------------------------------------------------------------------
+SnapKeyPlus v1.2.9 introduces two **experimental bypass modes** aimed at improving compatibility with games that impose stricter input policies, such as **Counter-Strike 2 (CS2)**. These modes can be toggled independently in the configuration file and allow SnapKey to remain active while circumventing CS2’s built-in restrictions on background input automation.
 
 > ⚙️ **VAC Bypass A** — Simulates real-time user input using a lower-level system call chain.
 > ⚙️ **VAC Bypass B** — Uses synthetic input injection with randomized timings to mimic human behavior more accurately.
@@ -29,18 +31,13 @@ Both modes are entirely optional and **disabled by default**. When enabled, Snap
 > These features are **experimental** and **not officially endorsed by Valve or any game publisher**. While SnapKey does not directly modify any game files or memory, **use of automation tools may still violate Terms of Service** for certain games.
 > **Use at your own risk.**
 
-For details on how these bypass modes work and how to enable them, refer to the [**Bypass Modes Wiki Page**](https://github.com/cafali/SnapKey/wiki/VAC-Bypass-Modes).
-
----
-
 Download
 --------------------------------------------------------------------------------------------------
 <p align="center">
-  <a href="https://github.com/cafali/SnapKey/releases">Download from GitHub</a> |
+  <a href="https://github.com/kaxlabs/SnapKeyPlus/releases">Download from GitHub</a> |
   <a href="https://sourceforge.net/projects/snapkey/">Download from SourceForge</a> |
   <a href="https://www.softpedia.com/get/Tweak/System-Tweak/SnapKey.shtml">Download from Softpedia</a>
 </p>
-
 
 [![latesver](https://github.com/user-attachments/assets/09694f7c-6eeb-4c80-9a02-1d777956d181)](https://github.com/cafali/SnapKey/wiki/Updates)
 
@@ -91,6 +88,38 @@ press **"A"** instead.
 
 <img src="https://github.com/user-attachments/assets/4453aba4-b9bc-45e8-8a80-80caad39347b" width="600" height="338" alt="STRAFE">
 
+**Quick Guide to Using SnapKey**
+--------------------------------------------------------------------------------------------------
+![use](https://github.com/user-attachments/assets/4d9fdf11-ec72-459c-995e-364bf1fc8d66)
+
+1. Get SnapKey:
+   - [Download](https://github.com/kaxlabs/SnapKeyPlus/releases), Unzip and Launch SnapKey.exe
+
+<img src="https://github.com/user-attachments/assets/7f8f1b06-01a8-4bc9-af9f-87d0b19b4e15" alt="Folder" width="80%">
+
+2. System Tray:
+   - SnapKey will appear in your system tray
+
+![tray](https://github.com/user-attachments/assets/26c08735-76f2-4bc0-aa75-44c9a866b453)
+
+3. You're All Set:
+   - SnapKey is now running and is ready to use
+ 
+4. Rebind Keys (Optional):
+   - [Rebind your keys](https://github.com/cafali/SnapKey/wiki/Rebinding-Keys) if you're using a nonstandard keyboard layout or if you want to map different keys
+
+Disable SnapKey
+--------------------------------------------------------------------------------------------------
+- Double-click the tray icon to disable SnapKey directly or Right-click the SnapKey icon in the system tray and select "Disable SnapKey". This option disables the entire SnapKey functionality of the keys that are set in the config file while keeping the SnapKey process and the software running in the tray.
+
+![image](https://github.com/user-attachments/assets/4f9d8d30-4674-4361-bc87-84ee70ce4116)
+
+Exit SnapKey
+--------------------------------------------------------------------------------------------------
+   - Right-click the SnapKey icon in the system tray and select "Exit SnapKey"
+
+![image](https://github.com/user-attachments/assets/c3a9534e-ed8b-4258-be56-37b6117c1814)
+
 **Linux Support**
 --------------------------------------------------------------------------------------------------
 Since SnapKey isn’t natively supported on Linux, it’s recommended to check out @Dillacorn's guide on **[running SnapKey on Linux](https://github.com/cafali/SnapKey/issues/4#issuecomment-2251568839)**.
@@ -136,17 +165,19 @@ Looking for More Information? Got Questions or Need Help?
 ----
 
 <p align="center">
-  SnapKey by
+  SnapKeyPlus by
 </p>
 
 <p align="center">
   <a href="https://github.com/cafali">@cafali</a> 
-  <a href="https://github.com/minteeaa">@minteeaa</a> 
+  <a href="https://github.com/minteeaa">@minteeaa</a>
+  <a href="https://github.com/kaxonomy">@kaxonomy</a> 
   <a href="https://github.com/Yaw-Dev">@Yaw-Dev</a>
+  <a href="https://github.com/fazildgr8">@fazildgr8</a> 
 </p>
 
 <p align="center">
-  <a href="https://github.com/cafali/Snapkey/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=cafali/Snapkey" />
+  <a href="https://github.com/kaxonomy/SnapKeyPlus/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=kaxlabs/SnapKeyPlus" />
   </a>
 </p>
