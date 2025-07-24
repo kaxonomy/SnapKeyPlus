@@ -72,9 +72,6 @@ the **"A"** key. When you release the **"D"** key, the action associated with th
 long as you're still holding it down. The same principle applies if you start with **"D"** held down and 
 press **"A"** instead.
 
-> [!NOTE]
-> SnapKey and similar solutions have been disallowed in certain games; illustrations shown are for demonstrative purposes only.
-
 ![Snapkey](https://github.com/user-attachments/assets/504ffa5e-50d3-4a77-9016-70f22d143cb1)
 
 **Enhanced precision of counter-strafing**
