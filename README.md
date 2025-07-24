@@ -23,6 +23,7 @@ SnapKeyPlus v1.2.9 introduces two **experimental bypass modes** aimed at improvi
 > ⚙️ **VAC Bypass B** — Uses synthetic input injection with randomized timings to mimic human behavior more accurately.
 
 When a mode is enabled, SnapKeyPlus will change its tray icon to indicate **VAC bypass mode** is active:
+
 <img width="239" height="274" alt="image" src="https://github.com/user-attachments/assets/a1019787-0420-49e6-aa87-1e79f78bb66c" />
 
 > \[!WARNING]
