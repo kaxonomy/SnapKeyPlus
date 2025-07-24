@@ -167,17 +167,8 @@ Looking for More Information? Got Questions or Need Help?
 <p align="center">
   SnapKeyPlus by
 </p>
-
-<p align="center">
-  <a href="https://github.com/cafali">@cafali</a> 
-  <a href="https://github.com/minteeaa">@minteeaa</a>
-  <a href="https://github.com/kaxonomy">@kaxonomy</a> 
-  <a href="https://github.com/Yaw-Dev">@Yaw-Dev</a>
-  <a href="https://github.com/fazildgr8">@fazildgr8</a> 
-</p>
-
 <p align="center">
   <a href="https://github.com/kaxonomy/SnapKeyPlus/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=kaxlabs/SnapKeyPlus" />
+    <img src="https://contrib.rocks/image?repo=kaxonomy/SnapKeyPlus" />
   </a>
 </p>
