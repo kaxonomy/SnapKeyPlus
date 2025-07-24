@@ -14,13 +14,13 @@ SnapKey is a lightweight, open-source tool that operates from the system tray an
 
 [![COMPATIBLE](https://github.com/user-attachments/assets/069a7a23-cfe4-47eb-8ac2-05872fcc2028)](https://github.com/cafali/SnapKey/wiki/Compatibility-List)
 
-### **New in v1.2.9 – Experimental VAC/CS2 Bypass Modes 🚫🎮**
+### **New in v1.2.8 – Experimental VAC/CS2 Bypass Modes 🚫🎮**
 --------------------------------------------------------------------------------------------------
-SnapKeyPlus v1.2.9 introduces two **experimental bypass modes** aimed at improving compatibility with games that impose stricter input policies, such as **Counter-Strike 2 (CS2)**. These modes can be toggled independently in the configuration file and allow SnapKeyPlus to remain active while circumventing CS2’s built-in restrictions on background input automation.
+SnapKeyPlus v1.2.8 introduces two **experimental bypass modes** aimed at improving compatibility with games that impose stricter input policies, such as **Counter-Strike 2 (CS2)**. These modes can be toggled independently in the configuration file and allow SnapKeyPlus to remain active while circumventing CS2’s built-in restrictions on background input automation.
 
-> ⚙️ **VAC Bypass A** — Simulates real-time user input using a lower-level system call chain.
+> ⚙️ **VAC bypass A** — Simulates real-time user input using a lower-level system call chain.
 > 
-> ⚙️ **VAC Bypass B** — Uses synthetic input injection with randomized timings to mimic human behavior more accurately.
+> ⚙️ **VAC bypass B** — Uses synthetic input injection with randomized timings to mimic human behavior more accurately.
 
 When a mode is enabled, SnapKeyPlus will change its tray icon to indicate **VAC bypass mode** is active:
 
