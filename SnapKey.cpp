@@ -1,4 +1,4 @@
-// SnapKey 1.2.6
+// SnapKey 1.2.8
 // github.com/cafali/SnapKey
 
 #include <windows.h>
@@ -9,8 +9,8 @@
 #include <unordered_map>
 #include <regex>
 #include <random>
-#include <thread>
 #include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -20,6 +20,10 @@ using namespace std;
 #define ID_TRAY_REBIND_KEYS             3002
 #define ID_TRAY_LOCK_FUNCTION           3003
 #define ID_TRAY_RESTART_SNAPKEY         3004
+#define ID_TRAY_HELP                    3005 // v1.2.8
+#define ID_TRAY_CHECKUPDATE             3006 // v1.2.8
+#define ID_TRAY_VAC_BYPASS_A            3007
+#define ID_TRAY_VAC_BYPASS_B            3008
 #define WM_TRAYICON                     (WM_USER + 1)
 
 struct KeyState
@@ -43,16 +47,27 @@ HHOOK hHook = NULL;
 HANDLE hMutex = NULL;
 NOTIFYICONDATA nid;
 bool isLocked = false; // Variable to track the lock state
+bool vacBypassAEnabled = false; // VAC bypass A toggle
+bool vacBypassBEnabled = false; // VAC bypass B toggle
+int vacCounter = 0;    // counter for imperfect snaptap
+int vacAMinDelay = 15; // A mode minimum overlap delay
+int vacAMaxDelay = 35; // A mode maximum overlap delay
+int vacBMinDelay = 5;  // B mode minimum release-press interval
+int vacBMaxDelay = 15; // B mode maximum release-press interval
+
+static std::mt19937 rng(std::random_device{}());
 
 // Function declarations
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void InitNotifyIconData(HWND hwnd);
 bool LoadConfig(const std::string& filename);
-void CreateDefaultConfig(const std::string& filename); // Declaration
-void RestoreConfigFromBackup(const std::string& backupFilename, const std::string& destinationFilename); // Declaration
-std::string GetVersionInfo(); // Declaration
+void CreateDefaultConfig(const std::string& filename); 
+void RestoreConfigFromBackup(const std::string& backupFilename, const std::string& destinationFilename);
+std::string GetVersionInfo();
 void SendKey(int target, bool keyDown);
+void UpdateTrayIcon();
+void WriteConfigValue(const std::string& filename, const std::string& key, int value);
 
 // Random delay settings
 int minDelay = 1;
@@ -117,6 +132,7 @@ int main()
 
     // Initialize and add the system tray icon
     InitNotifyIconData(hwnd);
+    UpdateTrayIcon();
 
     // Set the hook
     hHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, NULL, 0);
@@ -156,9 +172,9 @@ void handleKeyDown(int keyCode)
     if (!currentKeyInfo.keyDown)
     {
         currentKeyInfo.keyDown = true;
-        SendKey(keyCode, true);
         if (currentGroupInfo.activeKey == 0 || currentGroupInfo.activeKey == keyCode)
         {
+            SendKey(keyCode, true);
             currentGroupInfo.activeKey = keyCode;
         }
         else
@@ -166,7 +182,31 @@ void handleKeyDown(int keyCode)
             currentGroupInfo.previousKey = currentGroupInfo.activeKey;
             currentGroupInfo.activeKey = keyCode;
 
-            SendKey(currentGroupInfo.previousKey, false);
+            if (vacBypassBEnabled && std::uniform_int_distribution<int>(0,1)(rng) == 0)
+            {
+                SendKey(currentGroupInfo.previousKey, false);
+                std::this_thread::sleep_for(std::chrono::milliseconds(
+                    std::uniform_int_distribution<int>(vacBMinDelay, vacBMaxDelay)(rng)));
+                SendKey(keyCode, true);
+            }
+            else
+            {
+                SendKey(keyCode, true);
+                if (vacBypassAEnabled)
+                {
+                    if (vacCounter >= 17)
+                    {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(
+                            std::uniform_int_distribution<int>(vacAMinDelay, vacAMaxDelay)(rng)));
+                        vacCounter = 0;
+                    }
+                    else
+                    {
+                        vacCounter++;
+                    }
+                }
+                SendKey(currentGroupInfo.previousKey, false);
+            }
         }
     }
 }
@@ -269,16 +309,30 @@ void InitNotifyIconData(HWND hwnd)
     Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
-std::string GetVersionInfo() // Get version info
+void UpdateTrayIcon()
 {
-    std::ifstream versionFile("meta/version");
-    if (!versionFile.is_open()) {
-        return "Version info not available";
+    const TCHAR* iconFile = TEXT("icon.ico");
+    if (isLocked)
+    {
+        iconFile = TEXT("icon_off.ico");
+    }
+    else if (vacBypassAEnabled || vacBypassBEnabled)
+    {
+        iconFile = TEXT("icon_vac_bypass.ico");
     }
 
-    std::string version;
-    std::getline(versionFile, version);
-    return version.empty() ? "Version info not available" : version;
+    HICON hIcon = (HICON)LoadImage(NULL, iconFile, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+    if (!hIcon)
+    {
+        hIcon = (HICON)LoadImage(NULL, TEXT("icon.ico"), IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+    }
+
+    if (hIcon)
+    {
+        nid.hIcon = hIcon;
+        Shell_NotifyIcon(NIM_MODIFY, &nid);
+        DestroyIcon(hIcon);
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -292,13 +346,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             GetCursorPos(&curPoint);
             SetForegroundWindow(hwnd);
 
-            // Create context menu
+            // context menu
             HMENU hMenu = CreatePopupMenu();
+            // settings & tweaks
             AppendMenu(hMenu, MF_STRING, ID_TRAY_REBIND_KEYS, TEXT("Rebind Keys"));
-            AppendMenu(hMenu, MF_STRING | (isLocked ? MF_CHECKED : MF_UNCHECKED), ID_TRAY_LOCK_FUNCTION, TEXT("Disable SnapKey"));
             AppendMenu(hMenu, MF_STRING, ID_TRAY_RESTART_SNAPKEY, TEXT("Restart SnapKey"));
+            AppendMenu(hMenu, MF_STRING, ID_TRAY_LOCK_FUNCTION, isLocked ? TEXT("Enable SnapKey") : TEXT("Disable SnapKey")); // dynamicly switch between state
+            AppendMenu(hMenu, MF_STRING | (vacBypassAEnabled ? MF_CHECKED : 0), ID_TRAY_VAC_BYPASS_A, TEXT("VAC bypass A"));
+            AppendMenu(hMenu, MF_STRING | (vacBypassBEnabled ? MF_CHECKED : 0), ID_TRAY_VAC_BYPASS_B, TEXT("VAC bypass B"));
+            // support & info
             AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-            AppendMenu(hMenu, MF_STRING, ID_TRAY_VERSION_INFO, TEXT("Version Info"));
+            AppendMenu(hMenu, MF_STRING, ID_TRAY_HELP, TEXT("Get Help"));
+            AppendMenu(hMenu, MF_STRING, ID_TRAY_CHECKUPDATE, TEXT("Check Updates"));
+            AppendMenu(hMenu, MF_STRING, ID_TRAY_VERSION_INFO, TEXT("Version Info (1.2.8)"));
+            AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+            // exit
             AppendMenu(hMenu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT("Exit SnapKey"));
 
             // Display the context menu
@@ -311,45 +373,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             isLocked = !isLocked;
 
             // Update the tray icon
-            if (isLocked)
-            {
-                // Load icon_off.ico (OFF)
-                HICON hIconOff = (HICON)LoadImage(NULL, TEXT("icon_off.ico"), IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-                if (hIconOff)
-                {
-                    nid.hIcon = hIconOff;
-                    Shell_NotifyIcon(NIM_MODIFY, &nid);
-                    DestroyIcon(hIconOff);
-                }
-            }
-            else
-            {
-                // Load icon.ico (ON)
-                HICON hIconOn = (HICON)LoadImage(NULL, TEXT("icon.ico"), IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-                if (hIconOn)
-                {
-                    nid.hIcon = hIconOn;
-                    Shell_NotifyIcon(NIM_MODIFY, &nid);
-                    DestroyIcon(hIconOn);
-                }
-            }
+            UpdateTrayIcon();
         }
         break;
 
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
-        case ID_TRAY_EXIT_CONTEXT_MENU_ITEM:
+        case ID_TRAY_EXIT_CONTEXT_MENU_ITEM: // context menu options
             PostQuitMessage(0);
             break;
-        case ID_TRAY_VERSION_INFO:
+        case ID_TRAY_VERSION_INFO: // get version info
             {
                 std::string versionInfo = GetVersionInfo();
-                MessageBox(hwnd, versionInfo.c_str(), TEXT("Version Info"), MB_OK);
-                
+                MessageBox(hwnd, versionInfo.c_str(), TEXT("SnapKey Version Info"), MB_OK);
             }
             break;
-        case ID_TRAY_REBIND_KEYS:
+        case ID_TRAY_REBIND_KEYS: // rebind keys - open cfg
             {
                 TCHAR szExeFileName[MAX_PATH];
                 GetModuleFileName(NULL, szExeFileName, MAX_PATH);
@@ -359,7 +399,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 ShellExecute(NULL, TEXT("open"), configPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
             }
             break;
-        case ID_TRAY_RESTART_SNAPKEY:
+        
+        case ID_TRAY_HELP: // get help - open README.pdf
+            {
+                ShellExecute(NULL, TEXT("open"), TEXT("README.pdf"), NULL, NULL, SW_SHOWNORMAL);
+            }
+            break;
+
+        case ID_TRAY_CHECKUPDATE: // check updates - open github release page
+            {
+                int result = MessageBox(NULL,
+                            TEXT("You are about to visit the SnapKey update page (github.com). Continue?"),
+                            TEXT("Update SnapKey"),
+                            MB_YESNO | MB_ICONQUESTION);
+
+                        if (result == IDYES)
+                    {
+                ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/cafali/SnapKey/releases"), NULL, NULL, SW_SHOWNORMAL);
+                }
+            }
+            break;
+
+        case ID_TRAY_RESTART_SNAPKEY: // restart snapkey 
             {
                 TCHAR szExeFileName[MAX_PATH];
                 GetModuleFileName(NULL, szExeFileName, MAX_PATH);
@@ -367,18 +428,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 PostQuitMessage(0);
             }
             break;
-        case ID_TRAY_LOCK_FUNCTION:
+        case ID_TRAY_LOCK_FUNCTION: // lock sticky keys
             {
                 isLocked = !isLocked;
-                HICON hIcon = isLocked
-                    ? (HICON)LoadImage(NULL, TEXT("icon_off.ico"), IMAGE_ICON, 0, 0, LR_LOADFROMFILE)
-                    : (HICON)LoadImage(NULL, TEXT("icon.ico"), IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-                if (hIcon)
-                {
-                    nid.hIcon = hIcon;
-                    Shell_NotifyIcon(NIM_MODIFY, &nid);
-                    DestroyIcon(hIcon);
-                }
+                UpdateTrayIcon();
+            }
+            break;
+        case ID_TRAY_VAC_BYPASS_A: // toggle VAC bypass A
+            {
+                vacBypassAEnabled = !vacBypassAEnabled;
+                WriteConfigValue("config.cfg", "vac_bypass_a", vacBypassAEnabled ? 1 : 0);
+                UpdateTrayIcon();
+            }
+            break;
+        case ID_TRAY_VAC_BYPASS_B: // toggle VAC bypass B
+            {
+                vacBypassBEnabled = !vacBypassBEnabled;
+                WriteConfigValue("config.cfg", "vac_bypass_b", vacBypassBEnabled ? 1 : 0);
+                UpdateTrayIcon();
             }
             break;
         }
@@ -392,6 +459,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
+}
+
+// version information window
+std::string GetVersionInfo() {
+    return "SnapKey v1.2.8 (R17)\n"
+           "Version Date: June 19, 2025\n"
+           "Repository: github.com/cafali/SnapKey\n"
+           "License: MIT License\n";
 }
 
 // Function to copy snapkey.backup (meta folder) to the main directory
@@ -425,6 +500,35 @@ void CreateDefaultConfig(const std::string& filename)
     RestoreConfigFromBackup(backupFilename, filename);
 }
 
+void WriteConfigValue(const std::string& filename, const std::string& key, int value)
+{
+    std::ifstream inFile(filename);
+    std::vector<std::string> lines;
+    bool found = false;
+    if (inFile.is_open()) {
+        std::string line;
+        std::regex pat("^\\s*" + key + "\\s*=");
+        while (getline(inFile, line)) {
+            if (std::regex_search(line, pat)) {
+                lines.push_back(key + " = " + std::to_string(value));
+                found = true;
+            } else {
+                lines.push_back(line);
+            }
+        }
+        inFile.close();
+    }
+
+    if (!found) {
+        lines.push_back(key + " = " + std::to_string(value));
+    }
+
+    std::ofstream outFile(filename, std::ios::trunc);
+    for (const auto& l : lines) {
+        outFile << l << "\n";
+    }
+}
+
 // Check for config.cfg
 bool LoadConfig(const std::string& filename)
 {
@@ -444,6 +548,10 @@ bool LoadConfig(const std::string& filename)
 
     string line; // Check for duplicated keys in the config file
     int id = 0;
+    bool foundA = false, foundB = false;
+    bool foundAMin = false, foundAMax = false;
+    bool foundBMin = false, foundBMax = false;
+
     while (getline(configFile, line)) {
         istringstream iss(line);
         string key;
@@ -455,6 +563,7 @@ bool LoadConfig(const std::string& filename)
         }
         else if (getline(iss, key, '=') && (iss >> value))
         {
+            key = regex_replace(key, regex("^\\s+|\\s+$"), "");
             if (key.find("key") != string::npos)
             {
                 if (!KeyInfo[value].registered)
@@ -469,6 +578,24 @@ bool LoadConfig(const std::string& filename)
                     return false;
                 }
             }
+            else if (key == "vac_bypass_a") {
+                vacBypassAEnabled = (value != 0); foundA = true;
+            }
+            else if (key == "vac_bypass_b") {
+                vacBypassBEnabled = (value != 0); foundB = true;
+            }
+            else if (key == "vac_a_min_delay") {
+                vacAMinDelay = value; foundAMin = true;
+            }
+            else if (key == "vac_a_max_delay") {
+                vacAMaxDelay = value; foundAMax = true;
+            }
+            else if (key == "vac_b_min_delay") {
+                vacBMinDelay = value; foundBMin = true;
+            }
+            else if (key == "vac_b_max_delay") {
+                vacBMaxDelay = value; foundBMax = true;
+            }
         }
         if (line.find("random_delay_ms=") == 0)
         {
@@ -480,5 +607,23 @@ bool LoadConfig(const std::string& filename)
             }
         }
     }
+    configFile.close();
+
+    if (vacAMinDelay < 0 || vacAMaxDelay < 0 || vacAMaxDelay < vacAMinDelay) {
+        vacAMinDelay = 15;
+        vacAMaxDelay = 35;
+    }
+    if (vacBMinDelay < 0 || vacBMaxDelay < 0 || vacBMaxDelay < vacBMinDelay) {
+        vacBMinDelay = 5;
+        vacBMaxDelay = 15;
+    }
+
+    if (!foundA) WriteConfigValue(filename, "vac_bypass_a", vacBypassAEnabled ? 1 : 0);
+    if (!foundB) WriteConfigValue(filename, "vac_bypass_b", vacBypassBEnabled ? 1 : 0);
+    if (!foundAMin) WriteConfigValue(filename, "vac_a_min_delay", vacAMinDelay);
+    if (!foundAMax) WriteConfigValue(filename, "vac_a_max_delay", vacAMaxDelay);
+    if (!foundBMin) WriteConfigValue(filename, "vac_b_min_delay", vacBMinDelay);
+    if (!foundBMax) WriteConfigValue(filename, "vac_b_max_delay", vacBMaxDelay);
+
     return true;
 }
